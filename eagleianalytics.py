@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
-"""Usage: eagleianalytics.py <csv>
+"""Usage: eagleianalytics.py <csv> <outfile>
 
 Process csv file from Google Analytics and lookup eagle-i resource
 
 Arguments:
-	csv    required csv file
+	csv    	required csv file
+	outfile	csv file with resource information added
 
 """
 
@@ -16,10 +17,11 @@ from bs4 import BeautifulSoup
 def landingPage(uri):
 	url = 'http://eagle-i.itmat.upenn.edu' + uri + '?forceXML'
 	payload = {'uri': url}
+	uriInfo = ()
 
 	r = requests.get(url)
-	#outfile = codecs.open('./out_t7.xml','w','utf-8') # for inspecting xml
-	#outfile.write(r.text)
+	# outfile = codecs.open('./out_.xml','w','utf-8') # for inspecting xml
+	# outfile.write(r.text)
 	soup = BeautifulSoup(r.text, "lxml")
 	assertedType = soup.find("asserted-types")
 	inferredTypes = soup.find("inferredTypes")
@@ -30,42 +32,50 @@ def landingPage(uri):
 	# if uri corresponds to resource find owning organization
 	if(soup.find(uri="http://xmlns.com/foaf/0.1/Organization") or soup.find(uri="http://xmlns.com/foaf/0.1/Person")):
 		pass
+	# software
+	elif(soup.find(uri="http://purl.obolibrary.org/obo/ERO_0000071")):
+		loc = soup.find(uri="http://purl.obolibrary.org/obo/ERO_0000070")
+	# non-software resources
 	else:
 		loc = soup.find(uri="http://purl.obolibrary.org/obo/RO_0001025")
+
+	try:
 		locP = loc.parent.parent
 		locatedIn = locP.object.resource.string
-
-	print resourceName, resourceType,
-	try:
-		print locatedIn
 	except:
-		print "N/A"
+		locatedIn = "N/A"
+
+	uriInfo = (resourceName, resourceType, locatedIn)
+	return (resourceName, resourceType, locatedIn)
+
+# x`landingPage("/i/00000138-81e5-b042-9cd7-d7e280000000")
 
 if __name__ == '__main__':
 	arguments = docopt.docopt(__doc__)
 	fieldnames = ['Service Provider', 'City', 'Landing Page', 'Full Referrer', \
-				  'Country', 'Users', 'Organic Searches']
+				  'Country', 'Users', 'Organic Searches', 'Resource Name', \
+				  'Resource Type', 'Location']
+	
 	with open(arguments['<csv>'], 'rb') as csvfile:
-		# skip header rows
-		for i in range(0,7):
+		for i in range(0,7):  # skip header rows
 			next(csvfile)
-		reader = csv.DictReader(csvfile, fieldnames=fieldnames)
-		print("Adding row numbers...")
+		reader = csv.DictReader(csvfile, fieldnames=fieldnames, restval='')
 		for row in reader:
-			print(row['Landing Page'], row['City'])
+			print row['Landing Page'],
+			if(row['Landing Page'] == '/'):
+				pass
+			elif(row['Landing Page'] == '(not set)'):
+				pass
+			elif(row['Landing Page'] == ''):
+				pass
+			else:
+				rowUriInfo = landingPage(row['Landing Page'])
+				row['ResourceName'] = rowUriInfo[0]
+				row['resourceType'] = rowUriInfo[1]
+				row['Location'] = rowUriInfo[2]
+				print "\t".join(rowUriInfo)
 
-# t1 = '/i/00000138-7cbe-8ce9-fbab-3b8480000000' # core lab example
-# t2 = '/i/00000141-eb21-a19f-91c7-0c6080000000' # person example
-# t4 = '/i/00000142-38e7-afa1-91c7-0c6080000000'
-# t5 = '/i/00000138-7c75-c358-fbab-3b8480000000' # department
-# t6 = '/i/0000013c-d9d6-4f98-f162-a2b280000000' # laboratory
-# t7 = '/i/0000013a-c1be-84b1-d69a-d90d80000000'
+	with open(arguments['<outfile>'], 'w') as csvoutfile:
+		writer = csv.DictWriter(csvoutfile, fieldnames=fieldnames)
 
-
-
-
-# landingPage(t1)
-# landingPage(t2)
-# landingPage(t7)
-
-#print infile
+		writer.writeheader()
