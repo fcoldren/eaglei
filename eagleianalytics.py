@@ -80,8 +80,16 @@ if __name__ == '__main__':
 				row['Resource Location'] = rowUriInfo[2]
 				#print "\t".join(rowUriInfo)
 			info.append(row)
-
+	
+	# comma separated (alone) for output problematic because some fields
+	# contain commas
 	with open(arguments['<outfile>'], 'w') as csvoutfile:
-		writer = csv.DictWriter(csvoutfile, fieldnames=fieldnames, restval='')
-		writer.writeheader()
-		writer.writerows(info)
+		csvoutfile.write("\t".join(fieldnames))
+		csvoutfile.write("\n")
+		#writer.writerows(info)
+		for row in info:
+			tmp = list()
+			for i in fieldnames:
+				tmp.append(row[i])
+			csvoutfile.write(("\t".join(tmp)).encode('utf-8'))
+			csvoutfile.write("\n")
