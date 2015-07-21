@@ -25,9 +25,16 @@ def landingPage(uri):
 	soup = BeautifulSoup(r.text, "lxml")
 	assertedType = soup.find("asserted-types")
 	inferredTypes = soup.find("inferredTypes")
+	
+	try:
+		resourceName = soup.resource.string
+	except:
+		resourceName = "BAD LANDING PAGE LINK"
 
-	resourceName = soup.resource.string
-	resourceType = assertedType.resource.string
+	try:
+		resourceType = assertedType.resource.string
+	except:
+		resourceType = "NO RESOURCE TYPE INFO"
 
 	# if uri corresponds to resource find owning organization
 	if(soup.find(uri="http://xmlns.com/foaf/0.1/Organization") or soup.find(uri="http://xmlns.com/foaf/0.1/Person")):
@@ -48,20 +55,18 @@ def landingPage(uri):
 	uriInfo = (resourceName, resourceType, locatedIn)
 	return (resourceName, resourceType, locatedIn)
 
-# x`landingPage("/i/00000138-81e5-b042-9cd7-d7e280000000")
-
 if __name__ == '__main__':
 	arguments = docopt.docopt(__doc__)
 	fieldnames = ['Service Provider', 'City', 'Landing Page', 'Full Referrer', \
-				  'Country', 'Users', 'Organic Searches', 'Resource Name', \
-				  'Resource Type', 'Location']
+				  'Date', 'Users', 'Organic Searches', 'Resource Name', \
+				  'Resource Type', 'Resource Location']
 	
 	with open(arguments['<csv>'], 'rb') as csvfile:
+		info = list()
 		for i in range(0,7):  # skip header rows
 			next(csvfile)
 		reader = csv.DictReader(csvfile, fieldnames=fieldnames, restval='')
 		for row in reader:
-			print row['Landing Page'],
 			if(row['Landing Page'] == '/'):
 				pass
 			elif(row['Landing Page'] == '(not set)'):
@@ -70,12 +75,13 @@ if __name__ == '__main__':
 				pass
 			else:
 				rowUriInfo = landingPage(row['Landing Page'])
-				row['ResourceName'] = rowUriInfo[0]
-				row['resourceType'] = rowUriInfo[1]
-				row['Location'] = rowUriInfo[2]
-				print "\t".join(rowUriInfo)
+				row['Resource Name'] = rowUriInfo[0]
+				row['Resource Type'] = rowUriInfo[1]
+				row['Resource Location'] = rowUriInfo[2]
+				#print "\t".join(rowUriInfo)
+			info.append(row)
 
 	with open(arguments['<outfile>'], 'w') as csvoutfile:
-		writer = csv.DictWriter(csvoutfile, fieldnames=fieldnames)
-
+		writer = csv.DictWriter(csvoutfile, fieldnames=fieldnames, restval='')
 		writer.writeheader()
+		writer.writerows(info)
