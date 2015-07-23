@@ -39,8 +39,11 @@ def landingPage(uri):
 	# if uri corresponds to resource find owning organization
 	if(soup.find(uri="http://xmlns.com/foaf/0.1/Organization") or soup.find(uri="http://xmlns.com/foaf/0.1/Person")):
 		pass
-	# software
-	elif(soup.find(uri="http://purl.obolibrary.org/obo/ERO_0000071")):
+	# used by case (should find the used by or located in instead of going resource by resource)
+	# software, database, or protocol
+	elif(soup.find(uri="http://purl.obolibrary.org/obo/ERO_0000071") or \
+		 soup.find(uri="http://purl.obolibrary.org/obo/ERO_0001716") or \
+		 soup.find(uri="http://purl.obolibrary.org/obo/OBI_0000272")):
 		loc = soup.find(uri="http://purl.obolibrary.org/obo/ERO_0000070")
 	# service
 	elif(soup.find(uri="http://purl.obolibrary.org/obo/ERO_0000005")):
