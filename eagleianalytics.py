@@ -42,6 +42,9 @@ def landingPage(uri):
 	# software
 	elif(soup.find(uri="http://purl.obolibrary.org/obo/ERO_0000071")):
 		loc = soup.find(uri="http://purl.obolibrary.org/obo/ERO_0000070")
+	# service
+	elif(soup.find(uri="http://purl.obolibrary.org/obo/ERO_0000005")):
+		loc = soup.find(uri="http://purl.obolibrary.org/obo/ERO_0000390")
 	# non-software resources
 	else:
 		loc = soup.find(uri="http://purl.obolibrary.org/obo/RO_0001025")
